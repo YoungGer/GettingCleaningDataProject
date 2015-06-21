@@ -1,0 +1,86 @@
+#Analysis
+
+##Task
+
+All tasks lies below:
+
+1. a tidy data set
+2. a link to Github with the analysis script
+3. a coodbook which describes work
+
+In this script, I'll finish these things:
+
+1. Merge the traing and test sets to create one data set
+2. Extracts only the measurements on the mean and sandard deviation for each measurement
+3. Uses descriptive activity names to name the activities in the data set
+4. Appropriately labels the data set with descriptive activity names
+5. Creates a second, independent tidy data set with the average of each variable for each activity and each subject
+
+##Preliminaries
+First, donlowd the file and unzip it manually, then set path 
+```{r}
+setwd('/Users/yangguangyao/Documents/GitHub_Project/GettingCleaningDataProject/UCI HAR Dataset')
+getwd()
+```
+
+
+##Read files
+```{r}
+subject_train = read.table('./train/subject_train.txt')
+X_train = read.table('./train/X_train.txt')
+y_train = read.table('./train/y_train.txt')
+subject_test = read.table('./test/subject_test.txt')
+X_test = read.table('./test/X_test.txt')
+y_test = read.table('./test/y_test.txt')
+```
+
+##Merge data
+Merge the traing、test and subject dataset and we get tidy data where train and test data are included
+```{r}
+X = rbind(X_train,X_test)
+Y = rbind(y_train,y_test)
+subject = rbind(subject_train,subject_test)
+data = cbind(X,Y,subject)
+dim(data)
+```
+
+##Extract mean and sd value
+```{r}
+col_mean = colMeans(data)
+col_sd = sapply(data,sd)
+list(col_mean = col_mean, col_sd = col_sd)
+```
+
+##Use descriptive activity names
+```{r}
+activity_label  = read.table('activity_labels.txt')
+names(data)[c(562,563)] = c('V562','V563')
+#merge process，add descriptive names to data and we get data1
+data1 = merge(data,activity_label,by.x = "V562",by.y = "V1")
+names(data1)
+```
+
+##Label data and get data2
+In data2, the first 561 attribute represents x, the 562th represents subject, the 563th and 564 represent y value.
+```{r}
+features = as.character(read.table('features.txt')$V2) # length 561
+features = c('y_code',features,'subject','y_desc')
+names(data1) = features
+#names(data1)
+data2 = data1[,c(2:562,563,1,564)]
+names(data2)
+```
+
+##Second tidy data set and we get list_group_split
+```{r}
+data_split = split(data2,data2$y_desc)
+list_group_splist = sapply(data_split,function(x) {
+colMeans(x[,1:562])
+})
+list_group_splist
+```
+
+##Write data
+```{r}
+write.table(data2,file = 'data.txt')
+```
